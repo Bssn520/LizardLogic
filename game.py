@@ -1,6 +1,6 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QMessageBox, QGridLayout
-from PyQt5.QtGui import QPixmap, QPalette, QBrush, QFont
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QMessageBox
+from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import Qt
 import random
 
@@ -58,11 +58,12 @@ class GameWidget(QWidget):
             button.setFixedSize(170, 240)
             button.setStyleSheet(f"""
                 QPushButton {{
-                    color: white;
+                    color: transparent; /* 设置卡片字体透明 */
                     background-image: url({image});
                     background-repeat: no-repeat;
                     background-position: center;
                     border: none;
+                    padding-top: 24px;
                 }}
             """)
             button.clicked.connect(lambda _, c=choice: self.make_choice(c))
@@ -86,12 +87,16 @@ class GameWidget(QWidget):
         QMessageBox.information(self, '结果', f'你选择了: {player_choice}\n电脑选择了: {computer_choice}\n{self.get_result_message(result)}')
 
         if self.player_score + self.computer_score == 5:
-            if self.player_score > self.computer_score:
-                QMessageBox.information(self, '游戏结束', '你赢了！')
-                self.reset_game()
-            else:
-                QMessageBox.information(self, '游戏结束', '电脑赢了！')
-                self.reset_game()
+            self.show_game_over_dialog(self.player_score > self.computer_score)
+
+    def show_game_over_dialog(self, player_won):
+        result_text = "你赢了！" if player_won else "电脑赢了！"
+        reply = QMessageBox.question(self, '游戏结束', f'{result_text} 是否继续游戏？', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+        
+        if reply == QMessageBox.Yes:
+            self.reset_game()
+        else:
+            QApplication.quit()
 
     def determine_winner(self, player_choice, computer_choice):
         rules = {
